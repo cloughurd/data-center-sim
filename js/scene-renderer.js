@@ -42,9 +42,8 @@ export class SceneRenderer {
       { x: 480, y: 225, scale: 0.9 },
       { x: 550, y: 240, scale: 1.05 },
       { x: 620, y: 220, scale: 0.85 },
-      { x: 680, y: 235, scale: 1.0 },
-      { x: 730, y: 250, scale: 1.1 },
-      { x: 770, y: 225, scale: 0.95 }
+      { x: 650, y: 200, scale: 0.75 },
+      { x: 785, y: 225, scale: 0.85 }
     ];
 
     this.resize();
@@ -223,14 +222,17 @@ export class SceneRenderer {
   renderTrees(ctx) {
     const racks = this.simData ? this.simData.inputs.serverRacks : 0;
     const solar = this.simData ? this.simData.inputs.solarPanels : 0;
+    const grid = this.simData ? this.simData.inputs.gridLines : 0;
     
-    // Buildings clear the center (x: 240 to 560)
+    // Buildings clear the center (x: 230 to 570)
     // Solar clears the left (x: 60 to 240)
+    // Power lines clear the utility easement (x: 640 to 760)
     for (const tree of this.treePositions) {
       const inBuildingZone = racks > 0 && tree.x >= 230 && tree.x <= 570;
       const inSolarZone = solar > 3 && tree.x < 240;
+      const inPowerZone = grid > 0 && tree.x >= 640 && tree.x <= 760;
 
-      if (inBuildingZone || inSolarZone) continue; // Cleared!
+      if (inBuildingZone || inSolarZone || inPowerZone) continue; // Cleared!
 
       ctx.save();
       ctx.translate(tree.x, tree.y);

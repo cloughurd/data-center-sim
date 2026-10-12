@@ -260,6 +260,8 @@ body {
   border-radius: var(--radius-md);
   padding: 1rem 1.25rem;
   box-shadow: var(--shadow-sm);
+  min-height: 200px;
+  box-sizing: border-box;
 }
 
 .quest-header {
@@ -333,13 +335,21 @@ body {
   gap: 1.25rem;
 }
 
-/* Bottleneck Card */
+/* Bottleneck Card - Static Fixed Height to Prevent Layout Shift */
 .bottleneck-card {
   border-radius: var(--radius-md);
   padding: 1rem 1.25rem;
   border: 1px solid var(--border-subtle);
   box-shadow: var(--shadow-sm);
-  transition: all 0.25s ease;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+  height: 116px;
+  min-height: 116px;
+  max-height: 116px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
 }
 
 .bottleneck-card.severity-good {
@@ -367,11 +377,15 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.4rem;
+  flex-shrink: 0;
 }
 
 .bottleneck-title {
   font-size: 1.05rem;
   font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .bottleneck-badge {
@@ -381,11 +395,14 @@ body {
   border-radius: var(--radius-full);
   background-color: #FFFFFF;
   box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
 }
 
 .bottleneck-desc {
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   color: var(--text-main);
+  line-height: 1.4;
+  overflow-y: auto;
 }
 
 /* Meters & Gauges Grid */
@@ -630,17 +647,4 @@ body {
   width: 100%;
   accent-color: #3B82F6;
   cursor: pointer;
-}
-
-/* ==========================================================================
-   Footer
-   ========================================================================== */
-.footer-bar {
-  background-color: #FFFFFF;
-  border-top: 1px solid var(--border-subtle);
-  padding: 1rem;
-  text-align: center;
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-top: auto;
 }
