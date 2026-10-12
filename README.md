@@ -34,8 +34,8 @@ When we stream video, play online games, or query artificial intelligence, physi
 ## 🎯 Educational Quests Included
 
 - **Free Exploration (Sandbox)**: Experiment with any combination of servers, cooling, and power.
-- **Quest 1: Streaming Launch Party**: Fix an internet traffic jam and prevent thermal throttling during a viral video launch.
-- **Quest 2: Drought in the Valley**: Handle 2,000 queries/sec with zero water consumption (water coolers = 0).
+- **Quest 1: Viral App Launch**: Fix an internet traffic jam and prevent thermal throttling while scaling to support 25,000+ active users.
+- **Quest 2: Drought in the Valley**: Handle 20,000 active users (2,000 ops/sec) with zero water consumption (water coolers = 0).
 - **Quest 3: 100% Clean Green Cloud**: Disconnect from the city power grid and run a stable data center entirely on solar panels.
 
 ---

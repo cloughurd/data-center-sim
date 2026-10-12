@@ -38,7 +38,7 @@ export class SimEngine {
       TREE_DENSITY_PER_ACRE: 45,    // trees in pristine forest
       HOMES_EQUIVALENT_PER_MW: 750, // homes powered by 1 Megawatt
       GALLONS_PER_POOL: 20000,      // standard neighborhood swimming pool size
-      QUERIES_PER_STREAMING_MOVIE: 50, // queries equivalent to streaming video
+      ACTIVE_USERS_PER_QUERY_SEC: 10, // each active online user generates ~0.1 req/sec (~1 every 10s) on average
     };
   }
 
@@ -253,7 +253,7 @@ export class SimEngine {
       actualThroughput,
       demandMetPct: incomingTraffic > 0 ? Math.min(100, Math.round((actualThroughput / incomingTraffic) * 100)) : 100,
       serverUtilizationPct,
-      streamingMoviesEquivalent: Math.round(actualThroughput / C.QUERIES_PER_STREAMING_MOVIE),
+      activeUsersEquivalent: Math.round(actualThroughput * C.ACTIVE_USERS_PER_QUERY_SEC),
       
       // Power
       gridPowerKW,

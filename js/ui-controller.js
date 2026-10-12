@@ -220,8 +220,9 @@ export class UIController {
     if (this.dom.throughputCompare) {
       this.dom.throughputCompare.textContent = 
         sim.actualThroughput > 0 
-          ? `≈ Streaming ${sim.streamingMoviesEquivalent.toLocaleString()} movies at once`
-          : `Data center is idle`;
+          ? `≈ Supporting ${sim.activeUsersEquivalent.toLocaleString()} active users online`
+          : `Data center is idle (0 users)`;
+      this.dom.throughputCompare.title = "Based on typical user usage (~1 request every 10 seconds across browsing, apps, and chat)";
     }
 
     // 3. Thermal Gauge

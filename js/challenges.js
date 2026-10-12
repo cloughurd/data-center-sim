@@ -40,10 +40,10 @@ export const CHALLENGES = [
   },
   {
     id: 'streaming_launch',
-    title: 'Quest 1: Streaming Launch Party',
+    title: 'Quest 1: Viral App Launch',
     difficulty: 'Beginner',
     badge: 'Balance 101',
-    description: 'A hit new multiplayer game just launched! Build a data center capable of handling at least 2,500 queries/second without burning up or stalling.',
+    description: 'A hit new social app just went viral! Build a data center capable of supporting at least 25,000 active online users without burning up or stalling.',
     initialState: {
       serverRacks: 12,
       networkLines: 1,
@@ -66,7 +66,7 @@ export const CHALLENGES = [
       },
       {
         id: 'reach_throughput',
-        label: 'Achieve at least 2,500 queries/sec',
+        label: 'Support at least 25,000 active users (2,500 ops/sec)',
         check: (sim) => sim.actualThroughput >= 2500
       }
     ],
