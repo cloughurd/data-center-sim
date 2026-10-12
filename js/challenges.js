@@ -12,10 +12,10 @@ export const CHALLENGES = [
     description: 'Experiment freely! Add racks, test network limits, watch heat rise, and see real-time environmental footprints.',
     initialState: {
       serverRacks: 0,
-      networkLines: 1,
+      networkLines: 0,
       airCoolers: 0,
       waterCoolers: 0,
-      gridLines: 1,
+      gridLines: 0,
       solarPanels: 0,
       userDemandPct: 75
     },
@@ -26,9 +26,9 @@ export const CHALLENGES = [
         check: (sim) => sim.inputs.serverRacks >= 1
       },
       {
-        id: 'prevent_overheat',
-        label: 'Keep servers cool below 70°C',
-        check: (sim) => sim.inputs.serverRacks > 0 && sim.serverTempC <= 70
+        id: 'connect_utilities',
+        label: 'Connect electricity & network fiber',
+        check: (sim) => sim.totalPowerAvailableKW > 0 && sim.inputs.networkLines >= 1
       },
       {
         id: 'handle_traffic',
@@ -36,7 +36,7 @@ export const CHALLENGES = [
         check: (sim) => sim.actualThroughput >= 1000
       }
     ],
-    hint: 'Start by adding a few server racks, then make sure you have enough network lines and cooling to support them!'
+    hint: 'Start by building a server rack, then connect electricity (grid or solar) and network fiber lines!'
   },
   {
     id: 'streaming_launch',

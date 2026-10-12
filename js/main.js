@@ -17,10 +17,10 @@ window.addEventListener('DOMContentLoaded', () => {
   // 1. Initialize simulation engine
   const engine = new SimEngine({
     serverRacks: 0,
-    networkLines: 1,
+    networkLines: 0,
     airCoolers: 0,
     waterCoolers: 0,
-    gridLines: 1,
+    gridLines: 0,
     solarPanels: 0,
     userDemandPct: 75
   });

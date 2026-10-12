@@ -8,10 +8,10 @@ export class SimEngine {
   constructor(initialState = {}) {
     this.state = {
       serverRacks: initialState.serverRacks ?? 0,
-      networkLines: initialState.networkLines ?? 1,
+      networkLines: initialState.networkLines ?? 0,
       airCoolers: initialState.airCoolers ?? 0,
       waterCoolers: initialState.waterCoolers ?? 0,
-      gridLines: initialState.gridLines ?? 1,
+      gridLines: initialState.gridLines ?? 0,
       solarPanels: initialState.solarPanels ?? 0,
       userDemandPct: initialState.userDemandPct ?? 75, // 0 - 100%
       ...initialState
@@ -198,10 +198,10 @@ export class SimEngine {
     } else if (isBlackout) {
       bottleneck = {
         type: 'BLACKOUT',
-        title: 'Power Outage!',
-        description: 'Not enough electricity from the power grid or solar panels to start the servers!',
+        title: 'Power Blackout!',
+        description: 'No electricity! Add power grid lines or solar panels to turn on your servers.',
         severity: 'danger',
-        badge: '⚡ Power Deficit'
+        badge: '⚡ No Power'
       };
     } else if (powerDeficit) {
       bottleneck = {
@@ -210,6 +210,14 @@ export class SimEngine {
         description: `Only ${maxPoweredRacks} of your ${s.serverRacks} server racks have enough electricity to turn on. Add more grid lines or solar panels!`,
         severity: 'warning',
         badge: '⚡ Power Limited'
+      };
+    } else if (s.networkLines === 0) {
+      bottleneck = {
+        type: 'NO_NETWORK',
+        title: 'No Internet Connection',
+        description: 'Your servers have power, but they are not connected to the internet! Add fiber lines to start serving users.',
+        severity: 'danger',
+        badge: '🌐 No Network'
       };
     } else if (serverTempC > C.MAX_SAFE_TEMP_C) {
       bottleneck = {

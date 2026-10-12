@@ -367,87 +367,106 @@ export class SceneRenderer {
 
   renderNetworkLine(ctx) {
     const lines = this.simData.inputs.networkLines;
-    if (lines === 0) return;
+    if (lines === 0) return; // Untouched meadow if no network lines!
 
-    const trenchY = 375;
-    // 1. Dual fiber conduit trench along bottom edge
+    const visibleLanes = Math.min(5, lines);
+    const trenchY = 370;
+    const trenchHeight = 8 + (visibleLanes * 5);
+
+    // 1. Dual fiber conduit trench along bottom edge (expands with lines)
     ctx.fillStyle = '#1E293B';
-    ctx.fillRect(0, trenchY, 800, 10);
+    ctx.fillRect(0, trenchY, 800, trenchHeight);
+    ctx.strokeStyle = '#0F172A';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0, trenchY, 800, trenchHeight);
 
-    // 2. Inbound Fiber Cable (Upper conduit: Sky Blue / Cyan)
-    ctx.strokeStyle = '#0EA5E9';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(0, trenchY + 3);
-    ctx.lineTo(390, trenchY + 3);
-    ctx.lineTo(390, 320); // Leads up into left side of data center
-    ctx.stroke();
+    // 2. Render Inbound & Outbound Fiber Strands per line
+    for (let k = 0; k < visibleLanes; k++) {
+      const inY = trenchY + 4 + (k * 5);
+      const inTurnX = 388 - (k * 6);
 
-    // 3. Outbound Fiber Cable (Lower conduit: Neon Violet / Magenta)
-    ctx.strokeStyle = '#C084FC';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(410, 320); // Leads down from right side of data center
-    ctx.lineTo(410, trenchY + 7);
-    ctx.lineTo(800, trenchY + 7);
-    ctx.stroke();
+      // Inbound cable (Cyan)
+      ctx.strokeStyle = '#0EA5E9';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, inY);
+      ctx.lineTo(inTurnX, inY);
+      ctx.lineTo(inTurnX, 320);
+      ctx.stroke();
 
-    // Subtle edge labels
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      const outY = trenchY + 6 + (k * 5);
+      const outTurnX = 412 + (k * 6);
+
+      // Outbound cable (Magenta)
+      ctx.strokeStyle = '#C084FC';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(outTurnX, 320);
+      ctx.lineTo(outTurnX, outY);
+      ctx.lineTo(800, outY);
+      ctx.stroke();
+    }
+
+    // Edge labels indicating line count
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
     ctx.font = 'bold 9px sans-serif';
-    ctx.fillText('📥 REQUESTS ➔', 10, trenchY - 3);
-    ctx.fillText('➔ RESPONSES 📤', 710, trenchY - 3);
+    ctx.fillText(`📥 INBOUND (${lines} ${lines === 1 ? 'strand' : 'strands'}) ➔`, 10, trenchY - 3);
+    ctx.fillText(`➔ OUTBOUND (${lines} ${lines === 1 ? 'strand' : 'strands'}) 📤`, 670, trenchY - 3);
 
     // ==========================================
-    // 4. Inbound Packets (User Traffic In)
+    // 3. Inbound Packets (Distributed across strands)
     // ==========================================
     const isBottleneck = this.simData.bottleneck.type === 'NETWORK_CHOKE';
     const inPacketColor = isBottleneck ? '#F59E0B' : '#00F5D4';
-    const inSpeed = isBottleneck ? 45 : 120;
+    // When bottlenecked, packets move sluggishly (traffic jam!); otherwise smooth highway speed!
+    const inSpeed = isBottleneck ? 40 : 120;
 
-    // Inbound traffic spawns based on demand
-    const inSpawnChance = Math.min(0.45, (this.simData.incomingTraffic / 3000) * 0.35 + 0.1);
+    // Inbound traffic spawns across strands based on demand
+    const inSpawnChance = Math.min(0.65, (this.simData.incomingTraffic / 3000) * 0.35 + (visibleLanes * 0.08));
     if (Math.random() < inSpawnChance) {
-      this.dataPackets.push({ progress: 0 });
+      const targetLane = Math.floor(Math.random() * visibleLanes);
+      this.dataPackets.push({ lane: targetLane, progress: 0 });
     }
 
     ctx.fillStyle = inPacketColor;
     for (let i = this.dataPackets.length - 1; i >= 0; i--) {
       const p = this.dataPackets[i];
+      const lane = (p.lane || 0) % visibleLanes;
       p.progress += (inSpeed * 0.016);
 
-      // Track 1: Horizontal x: 0 -> 390
-      // Track 2: Vertical y: (trenchY + 3) -> 320 (height = 58px)
-      if (p.progress <= 390) {
+      const inY = trenchY + 4 + (lane * 5);
+      const inTurnX = 388 - (lane * 6);
+
+      if (p.progress <= inTurnX) {
         ctx.beginPath();
-        ctx.arc(p.progress, trenchY + 3, 3, 0, Math.PI * 2);
+        ctx.arc(p.progress, inY, 2.8, 0, Math.PI * 2);
         ctx.fill();
       } else {
-        const vertProgress = p.progress - 390;
-        const upY = (trenchY + 3) - vertProgress;
+        const vertProgress = p.progress - inTurnX;
+        const upY = inY - vertProgress;
         if (upY >= 320) {
           ctx.beginPath();
-          ctx.arc(390, upY, 3, 0, Math.PI * 2);
+          ctx.arc(inTurnX, upY, 2.8, 0, Math.PI * 2);
           ctx.fill();
         }
       }
 
-      if (p.progress > 450) {
+      if (p.progress > inTurnX + (inY - 320) + 10) {
         this.dataPackets.splice(i, 1);
       }
     }
 
     // ==========================================
-    // 5. Outbound Packets (Processed Responses Out)
+    // 4. Outbound Packets (Distributed across strands)
     // ==========================================
     const throughput = this.simData.actualThroughput;
     const isPowered = throughput > 0 && !this.simData.isBlackout;
 
-    // Outbound packets only spawn if servers are actively computing work!
     if (isPowered) {
-      const outSpawnChance = Math.min(0.45, (throughput / 3000) * 0.35 + 0.08);
+      const outSpawnChance = Math.min(0.65, (throughput / 3000) * 0.35 + (visibleLanes * 0.07));
       if (Math.random() < outSpawnChance) {
-        this.outboundPackets.push({ progress: 0 });
+        const targetLane = Math.floor(Math.random() * visibleLanes);
+        this.outboundPackets.push({ lane: targetLane, progress: 0 });
       }
     }
 
@@ -457,27 +476,29 @@ export class SceneRenderer {
     ctx.fillStyle = outColor;
     for (let j = this.outboundPackets.length - 1; j >= 0; j--) {
       const op = this.outboundPackets[j];
+      const lane = (op.lane || 0) % visibleLanes;
       op.progress += (outSpeed * 0.016);
 
-      // Track 1: Vertical y: 320 -> (trenchY + 7) (dist = 62px)
-      // Track 2: Horizontal x: 410 -> 800 (dist = 390px)
-      const vertDist = (trenchY + 7) - 320;
+      const outY = trenchY + 6 + (lane * 5);
+      const outTurnX = 412 + (lane * 6);
+      const vertDist = outY - 320;
+
       if (op.progress <= vertDist) {
         const downY = 320 + op.progress;
         ctx.beginPath();
-        ctx.arc(410, downY, 3, 0, Math.PI * 2);
+        ctx.arc(outTurnX, downY, 2.8, 0, Math.PI * 2);
         ctx.fill();
       } else {
         const horizProgress = op.progress - vertDist;
-        const curX = 410 + horizProgress;
+        const curX = outTurnX + horizProgress;
         if (curX <= 800) {
           ctx.beginPath();
-          ctx.arc(curX, trenchY + 7, 3, 0, Math.PI * 2);
+          ctx.arc(curX, outY, 2.8, 0, Math.PI * 2);
           ctx.fill();
         }
       }
 
-      if (op.progress > vertDist + 400) {
+      if (op.progress > vertDist + (800 - outTurnX) + 10) {
         this.outboundPackets.splice(j, 1);
       }
     }
