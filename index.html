@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Center Simulator: Computing & Real-World Impact</title>
+  <meta name="description" content="An interactive simulation visualizing data center capacity, bottlenecks, and requirements for land, water, and electricity.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+
+  <!-- Top App Navigation / Header -->
+  <header class="header-bar">
+    <div class="header-container">
+      <div class="logo-group">
+        <span class="logo-icon">🏢⚡</span>
+        <div>
+          <h1 class="app-title">Data Center Impact Simulator</h1>
+          <p class="app-subtitle">Explore computing capacity vs. land, water & electricity trade-offs</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="challenge-selector-wrap">
+          <label for="challenge-select" class="selector-label">Mode:</label>
+          <select id="challenge-select" class="custom-select" aria-label="Select Learning Challenge">
+            <!-- Populated dynamically via challenges.js -->
+          </select>
+        </div>
+        <button id="btn-reset" class="btn-secondary" title="Reset current setup">🔄 Reset</button>
+        <button id="btn-mute" class="btn-secondary" title="Toggle sound effects">🔊 Sound</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Split Layout -->
+  <main class="main-layout">
+
+    <!-- Left Column: Visual Scene & Challenge Card -->
+    <section class="visual-column">
+      <div class="canvas-card">
+        <div class="canvas-wrapper">
+          <canvas id="sim-canvas" width="800" height="450" aria-label="Animated simulation of data center and natural landscape"></canvas>
+        </div>
+        <div class="canvas-footer">
+          <span>Live Visual Simulation</span>
+          <div class="scene-legend">
+            <span class="legend-item"><span class="legend-dot green"></span> Running</span>
+            <span class="legend-item"><span class="legend-dot blue"></span> Waiting (Idle)</span>
+            <span class="legend-item"><span class="legend-dot red"></span> Overheating</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Mission / Quest Card -->
+      <div class="quest-card">
+        <div class="quest-header">
+          <h2 class="quest-title">🎯 Mission Briefing</h2>
+        </div>
+        <p id="challenge-desc" class="quest-desc">Loading challenge...</p>
+        <ul id="challenge-goals" class="goal-list">
+          <!-- Populated dynamically -->
+        </ul>
+        <div id="challenge-success-banner" class="success-banner hidden">
+          🎉 Quest Complete! You balanced computing needs with the environment!
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Telemetry, Gauges, and Builder Controls -->
+    <section class="controls-column">
+
+      <!-- Real-Time Bottleneck Diagnostic -->
+      <div id="bottleneck-card" class="bottleneck-card severity-neutral">
+        <div class="bottleneck-header">
+          <h3 id="bottleneck-title" class="bottleneck-title">Pristine Meadow</h3>
+          <span id="bottleneck-badge" class="bottleneck-badge">No Servers</span>
+        </div>
+        <p id="bottleneck-desc" class="bottleneck-desc">Add server racks to start serving internet traffic!</p>
+      </div>
+
+      <!-- Computing Performance & Temperature Gauges -->
+      <div class="telemetry-grid">
+        <div class="telemetry-card">
+          <div class="telemetry-header">
+            <span class="telemetry-label">Throughput</span>
+            <span id="throughput-value" class="telemetry-value">0 ops/sec</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="throughput-bar" class="progress-bar-fill compute" style="width: 0%;"></div>
+          </div>
+          <span id="throughput-compare" class="telemetry-subtext">Data center is idle</span>
+        </div>
+
+        <div class="telemetry-card">
+          <div class="telemetry-header">
+            <span class="telemetry-label">Server Heat</span>
+            <span id="temp-value" class="telemetry-value">22°C</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="temp-bar" class="progress-bar-fill temp" style="width: 5%;"></div>
+          </div>
+          <span id="temp-status" class="status-tag good">Cool & Safe</span>
+        </div>
+      </div>
+
+      <!-- Environmental Footprint 3-Pillar Dashboard -->
+      <div class="impact-section">
+        <h3 class="section-title">🌍 Real-World Resource Footprint</h3>
+        <div class="impact-grid">
+          
+          <div class="impact-box">
+            <span class="impact-box-label">⚡ Electricity</span>
+            <span id="power-mw" class="impact-box-val">0 MW</span>
+            <span id="power-homes" class="impact-box-compare">≈ 0 homes</span>
+            <div style="margin-top: 4px;">
+              <span id="clean-energy-tag" class="status-tag neutral">0% Solar Clean</span>
+            </div>
+          </div>
+
+          <div class="impact-box">
+            <span class="impact-box-label">💧 Water Usage</span>
+            <span id="water-gpd" class="impact-box-val">0 gal/day</span>
+            <span id="water-pools" class="impact-box-compare">≈ 0 pools/week</span>
+          </div>
+
+          <div class="impact-box">
+            <span class="impact-box-label">🌲 Land & Forest</span>
+            <span id="land-remaining" class="impact-box-val">100% Left</span>
+            <span id="trees-cut" class="impact-box-compare">0 trees cleared</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Builder Steppers & Components -->
+      <div class="builder-section">
+        <h3 class="section-title">🛠️ Facility Builder</h3>
+        
+        <div class="builder-grid">
+
+          <!-- Server Racks -->
+          <div class="builder-item">
+            <div class="builder-info">
+              <span class="builder-name">💻 Server Racks</span>
+              <span class="builder-hint">+250 queries/s, +heat</span>
+            </div>
+            <div class="stepper-controls">
+              <button class="stepper-btn" data-param="serverRacks" data-delta="-1" aria-label="Decrease Server Racks">−</button>
+              <span id="rack-count" class="stepper-count">0</span>
+              <button class="stepper-btn" data-param="serverRacks" data-delta="1" aria-label="Increase Server Racks">+</button>
+            </div>
+          </div>
+
+          <!-- Network Fiber Lines -->
+          <div class="builder-item">
+            <div class="builder-info">
+              <span class="builder-name">🌐 Fiber Lines</span>
+              <span class="builder-hint">+600 traffic capacity</span>
+            </div>
+            <div class="stepper-controls">
+              <button class="stepper-btn" data-param="networkLines" data-delta="-1" aria-label="Decrease Fiber Lines">−</button>
+              <span id="network-count" class="stepper-count">1</span>
+              <button class="stepper-btn" data-param="networkLines" data-delta="1" aria-label="Increase Fiber Lines">+</button>
+            </div>
+          </div>
+
+          <!-- Air Coolers -->
+          <div class="builder-item">
+            <div class="builder-info">
+              <span class="builder-name">🌀 Air Coolers</span>
+              <span class="builder-hint">0 water, high electric</span>
+            </div>
+            <div class="stepper-controls">
+              <button class="stepper-btn" data-param="airCoolers" data-delta="-1" aria-label="Decrease Air Coolers">−</button>
+              <span id="air-count" class="stepper-count">0</span>
+              <button class="stepper-btn" data-param="airCoolers" data-delta="1" aria-label="Increase Air Coolers">+</button>
+            </div>
+          </div>
+
+          <!-- Water Coolers -->
+          <div class="builder-item">
+            <div class="builder-info">
+              <span class="builder-name">💧 Water Towers</span>
+              <span class="builder-hint">Max cooling, drinks water</span>
+            </div>
+            <div class="stepper-controls">
+              <button class="stepper-btn" data-param="waterCoolers" data-delta="-1" aria-label="Decrease Water Coolers">−</button>
+              <span id="water-count" class="stepper-count">0</span>
+              <button class="stepper-btn" data-param="waterCoolers" data-delta="1" aria-label="Increase Water Coolers">+</button>
+            </div>
+          </div>
+
+          <!-- Grid Lines -->
+          <div class="builder-item">
+            <div class="builder-info">
+              <span class="builder-name">⚡ Power Grid</span>
+              <span class="builder-hint">+250 kW reliable power</span>
+            </div>
+            <div class="stepper-controls">
+              <button class="stepper-btn" data-param="gridLines" data-delta="-1" aria-label="Decrease Grid Lines">−</button>
+              <span id="grid-count" class="stepper-count">1</span>
+              <button class="stepper-btn" data-param="gridLines" data-delta="1" aria-label="Increase Grid Lines">+</button>
+            </div>
+          </div>
+
+          <!-- Solar Panels -->
+          <div class="builder-item">
+            <div class="builder-info">
+              <span class="builder-name">☀️ Solar Panels</span>
+              <span class="builder-hint">+40 kW clean, uses land</span>
+            </div>
+            <div class="stepper-controls">
+              <button class="stepper-btn" data-param="solarPanels" data-delta="-1" aria-label="Decrease Solar Panels">−</button>
+              <span id="solar-count" class="stepper-count">0</span>
+              <button class="stepper-btn" data-param="solarPanels" data-delta="1" aria-label="Increase Solar Panels">+</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Traffic Demand Slider -->
+        <div class="slider-container">
+          <div class="slider-header">
+            <label for="traffic-slider">👥 Internet User Traffic Demand</label>
+            <span id="traffic-display">75% (Normal Day)</span>
+          </div>
+          <input type="range" id="traffic-slider" class="range-slider" min="10" max="100" value="75" step="5" aria-label="Internet user traffic demand level">
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="footer-bar">
+    <p>Data Center Impact Simulator &bull; Designed for middle-school exploration of cloud infrastructure and sustainability &bull; Free & Open Source</p>
+  </footer>
+
+  <!-- Simulation Application Modules -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
