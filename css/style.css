@@ -247,9 +247,11 @@ body {
   border-radius: 50%;
 }
 .legend-dot.green { background-color: #10B981; }
-.legend-dot.blue { background-color: #0EA5E9; }
+.legend-dot.blue { background-color: #38BDF8; }
 .legend-dot.amber { background-color: #F59E0B; }
 .legend-dot.red { background-color: #EF4444; }
+.legend-dot.cyan { background-color: #00F5D4; }
+.legend-dot.magenta { background-color: #F472B6; }
 
 /* Mission / Quest Card */
 .quest-card {

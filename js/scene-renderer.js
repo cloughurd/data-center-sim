@@ -23,6 +23,7 @@ export class SceneRenderer {
     this.steamParticles = [];
     this.heatParticles = [];
     this.dataPackets = [];
+    this.outboundPackets = [];
     this.birds = [
       { x: 100, y: 60, speed: 0.6, flap: 0 },
       { x: 130, y: 75, speed: 0.55, flap: 1.2 }
@@ -367,50 +368,115 @@ export class SceneRenderer {
     if (lines === 0) return;
 
     const trenchY = 375;
-    // Glowing fiber trench along bottom edge
-    ctx.fillStyle = '#264653';
-    ctx.fillRect(0, trenchY, 800, 6);
+    // 1. Dual fiber conduit trench along bottom edge
+    ctx.fillStyle = '#1E293B';
+    ctx.fillRect(0, trenchY, 800, 10);
 
-    ctx.strokeStyle = '#2A9D8F';
+    // 2. Inbound Fiber Cable (Upper conduit: Sky Blue / Cyan)
+    ctx.strokeStyle = '#0EA5E9';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(0, trenchY + 3);
-    ctx.lineTo(400, trenchY + 3);
-    ctx.lineTo(400, 320); // Feeds up into data center floor
+    ctx.lineTo(390, trenchY + 3);
+    ctx.lineTo(390, 320); // Leads up into left side of data center
     ctx.stroke();
 
-    // Data packets travelling along the line
-    const isBottleneck = this.simData.bottleneck.type === 'NETWORK_CHOKE';
-    const packetColor = isBottleneck ? '#E76F51' : '#00F5D4';
-    const speed = isBottleneck ? 40 : 120;
+    // 3. Outbound Fiber Cable (Lower conduit: Neon Violet / Magenta)
+    ctx.strokeStyle = '#C084FC';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(410, 320); // Leads down from right side of data center
+    ctx.lineTo(410, trenchY + 7);
+    ctx.lineTo(800, trenchY + 7);
+    ctx.stroke();
 
-    // Spawn packets
-    if (Math.random() < 0.25) {
-      this.dataPackets.push({ x: 0, progress: 0 });
+    // Subtle edge labels
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.font = 'bold 9px sans-serif';
+    ctx.fillText('📥 REQUESTS ➔', 10, trenchY - 3);
+    ctx.fillText('➔ RESPONSES 📤', 710, trenchY - 3);
+
+    // ==========================================
+    // 4. Inbound Packets (User Traffic In)
+    // ==========================================
+    const isBottleneck = this.simData.bottleneck.type === 'NETWORK_CHOKE';
+    const inPacketColor = isBottleneck ? '#F59E0B' : '#00F5D4';
+    const inSpeed = isBottleneck ? 45 : 120;
+
+    // Inbound traffic spawns based on demand
+    const inSpawnChance = Math.min(0.45, (this.simData.incomingTraffic / 3000) * 0.35 + 0.1);
+    if (Math.random() < inSpawnChance) {
+      this.dataPackets.push({ progress: 0 });
     }
 
-    ctx.fillStyle = packetColor;
+    ctx.fillStyle = inPacketColor;
     for (let i = this.dataPackets.length - 1; i >= 0; i--) {
       const p = this.dataPackets[i];
-      p.progress += (speed * 0.016);
-      p.x = p.progress;
+      p.progress += (inSpeed * 0.016);
 
-      if (p.x <= 400) {
+      // Track 1: Horizontal x: 0 -> 390
+      // Track 2: Vertical y: (trenchY + 3) -> 320 (height = 58px)
+      if (p.progress <= 390) {
         ctx.beginPath();
-        ctx.arc(p.x, trenchY + 3, 3.5, 0, Math.PI * 2);
+        ctx.arc(p.progress, trenchY + 3, 3, 0, Math.PI * 2);
         ctx.fill();
       } else {
-        // Turning upward
-        const upY = (trenchY + 3) - (p.x - 400);
-        if (upY > 320) {
+        const vertProgress = p.progress - 390;
+        const upY = (trenchY + 3) - vertProgress;
+        if (upY >= 320) {
           ctx.beginPath();
-          ctx.arc(400, upY, 3.5, 0, Math.PI * 2);
+          ctx.arc(390, upY, 3, 0, Math.PI * 2);
           ctx.fill();
         }
       }
 
-      if (p.progress > 460) {
+      if (p.progress > 450) {
         this.dataPackets.splice(i, 1);
+      }
+    }
+
+    // ==========================================
+    // 5. Outbound Packets (Processed Responses Out)
+    // ==========================================
+    const throughput = this.simData.actualThroughput;
+    const isPowered = throughput > 0 && !this.simData.isBlackout;
+
+    // Outbound packets only spawn if servers are actively computing work!
+    if (isPowered) {
+      const outSpawnChance = Math.min(0.45, (throughput / 3000) * 0.35 + 0.08);
+      if (Math.random() < outSpawnChance) {
+        this.outboundPackets.push({ progress: 0 });
+      }
+    }
+
+    const outSpeed = 120;
+    const outColor = '#F472B6'; // Neon pink / magenta response glow
+
+    ctx.fillStyle = outColor;
+    for (let j = this.outboundPackets.length - 1; j >= 0; j--) {
+      const op = this.outboundPackets[j];
+      op.progress += (outSpeed * 0.016);
+
+      // Track 1: Vertical y: 320 -> (trenchY + 7) (dist = 62px)
+      // Track 2: Horizontal x: 410 -> 800 (dist = 390px)
+      const vertDist = (trenchY + 7) - 320;
+      if (op.progress <= vertDist) {
+        const downY = 320 + op.progress;
+        ctx.beginPath();
+        ctx.arc(410, downY, 3, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        const horizProgress = op.progress - vertDist;
+        const curX = 410 + horizProgress;
+        if (curX <= 800) {
+          ctx.beginPath();
+          ctx.arc(curX, trenchY + 7, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      if (op.progress > vertDist + 400) {
+        this.outboundPackets.splice(j, 1);
       }
     }
   }
